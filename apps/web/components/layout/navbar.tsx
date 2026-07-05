@@ -31,7 +31,6 @@ export function Navbar() {
     { name: "Tentang", href: "#tentang" },
     { name: "Ekosistem", href: "#ekosistem" },
     { name: "Fitur", href: "#fitur" },
-    { name: "Hubungi Kami", href: "#kontak" },
   ]
 
   const toggleTheme = () => {

@@ -1,204 +1,126 @@
 "use client"
 
-import React, { useState } from "react"
-import { motion } from "motion/react"
-import { Cpu, MapPoint, Wallet2 as CreditCard, MedalStar as Sparkles, Settings } from "@solar-icons/react"
-import { Button } from "@workspace/ui/components/button"
-
-type CarType = "LCGC" | "Hatchback" | "Sedan" | "SUV_MPV"
-
-interface MileageInfo {
-  cost: number
-  items: string
-}
+import React, { useRef } from "react"
+import { motion, useScroll, useTransform } from "motion/react"
+import { Cpu, MapPoint, Wallet2 as CreditCard, MedalStar as Sparkles, Star } from "@solar-icons/react"
 
 export function Features() {
-  // Calculator state
-  const [carType, setCarType] = useState<CarType>("SUV_MPV")
-  const [mileage, setMileage] = useState<number>(20000)
+  const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Track scroll progress strictly between when the section sticks ('start start') and when it unsticks ('end end')
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  })
 
-  const carMultipliers: Record<CarType, number> = {
-    LCGC: 1.0,
-    Hatchback: 1.15,
-    Sedan: 1.3,
-    SUV_MPV: 1.45,
-  }
+  // Staggered vertical stacking interpolation (setipis gambar kedua):
+  // Card 1 starts at 0px, scale 1. As scroll progresses, it scales down and shifts up to show its header border
+  const y1 = useTransform(scrollYProgress, [0, 0.45, 0.95], ["0px", "-12px", "-24px"])
+  const scale1 = useTransform(scrollYProgress, [0, 0.45, 0.95], [1, 0.96, 0.92])
 
-  const mileageData: Record<number, MileageInfo> = {
-    10000: { cost: 350000, items: "Oli Mesin, Filter Oli, General Diagnostic Ringan" },
-    20000: { cost: 580000, items: "Oli Mesin, Filter Oli, Filter AC, Tune-up Ringan" },
-    40000: { cost: 1100000, items: "Oli Mesin, Filter Oli, Busi Standard, Minyak Rem, Tune-up Mayor" },
-    60000: { cost: 720000, items: "Oli Mesin, Filter Oli, Filter Udara, Tune-up Standard" },
-    80000: { cost: 1450000, items: "Oli Mesin, Filter Oli, Busi, Minyak Rem, Filter AC, Tune-up Mayor" },
-    100000: { cost: 850000, items: "Oli Mesin, Filter Oli, Cairan Radiator, General Diagnostic" },
-  }
+  // Card 2 starts below screen (100vh). Slides in and lands on top of Card 1 (with 12px top offset) over [0.15, 0.5].
+  // Then scales down and shifts up over [0.6, 0.95] when Card 3 stacks.
+  const y2 = useTransform(scrollYProgress, [0, 0.15, 0.5, 0.6, 0.95], ["100vh", "100vh", "12px", "12px", "0px"])
+  const scale2 = useTransform(scrollYProgress, [0, 0.5, 0.6, 0.95], [1, 1, 0.96, 0.96])
 
-  const activeData = mileageData[mileage] || { cost: 580000, items: "Oli Mesin, Filter Oli, Filter AC, Tune-up Ringan" }
-  const estimatedCost = activeData.cost * carMultipliers[carType]
+  // Card 3 starts below screen (100vh). Slides in and lands on top of Card 2 (with 24px top offset) over [0.6, 0.95].
+  const y3 = useTransform(scrollYProgress, [0, 0.6, 0.95], ["100vh", "100vh", "24px"])
+  const scale3 = useTransform(scrollYProgress, [0, 1], [1, 1])
 
   const featureCards = [
     {
-      icon: <Cpu className="w-6 h-6 text-sky-500" />,
+      icon: <Cpu className="w-32 h-32 text-sky-500/5 dark:text-sky-500/4" />,
       title: "Booking Servis Terjadwal",
-      desc: "Jadwalkan servis kendaraan Anda tanpa repot mengantre. Pilih slot waktu, jenis kendaraan, dan bengkel terdekat dalam hitungan detik.",
+      desc: "Jadwalkan servis berkala kendaraan tanpa perlu antre panjang. Pilih tanggal, waktu, dan bengkel mitra terdekat langsung dari aplikasi.",
+      badge: "Mitra Bengkel Resmi",
+      y: y1,
+      scale: scale1,
+      zIndex: 10,
     },
     {
-      icon: <MapPoint className="w-6 h-6 text-sky-500" />,
-      title: "Mekanik Panggilan Darurat (SOS)",
-      desc: "Kendaraan mendadak bermasalah di jalan? Kirim sinyal SOS darurat untuk memanggil mekanik bengkel terdekat langsung ke lokasi Anda.",
+      icon: <MapPoint className="w-32 h-32 text-rose-500/5 dark:text-rose-500/4" />,
+      title: "Mekanik Panggilan Darurat",
+      desc: "Kendaraan bermasalah di tengah perjalanan? Kirimkan koordinat lokasi untuk mendatangkan mekanik darurat ke TKP.",
+      badge: "Siaga 24 Jam penuh",
+      y: y2,
+      scale: scale2,
+      zIndex: 20,
     },
     {
-      icon: <CreditCard className="w-6 h-6 text-sky-500" />,
-      title: "Showroom & Pengajuan Kredit",
-      desc: "Bandingkan harga dan spesifikasi mobil dari berbagai dealer mitra resmi, serta lakukan pengajuan pembelian dan simulasi cicilan langsung.",
+      icon: <CreditCard className="w-32 h-32 text-sky-500/5 dark:text-sky-500/4" />,
+      title: "Showroom & Simulasi Kredit",
+      desc: "Bandingkan harga dan spesifikasi teknis mobil dealer resmi, lengkap dengan fitur simulasi cicilan pembiayaan terpercaya.",
+      badge: "Dealer Terverifikasi",
+      y: y3,
+      scale: scale3,
+      zIndex: 30,
     },
   ]
 
-  const mileages = [10000, 20000, 40000, 60000, 80000, 100000]
+  const anims = [
+    { y: y1, scale: scale1, zIndex: 10 },
+    { y: y2, scale: scale2, zIndex: 20 },
+    { y: y3, scale: scale3, zIndex: 30 },
+  ]
 
   return (
-    <section
-      id="fitur"
-      className="py-24 relative overflow-hidden bg-white dark:bg-slate-950"
-    >
-      {/* Decorative gradient blob */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 rounded-full bg-sky-200/10 dark:bg-sky-950/5 blur-3xl pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-6 md:px-8 relative z-10">
+    <div ref={containerRef} className="relative h-[400vh] w-full bg-white dark:bg-slate-950">
+      
+      {/* Sticky viewport frame - Center items as flex column with safe gap to avoid overlapping */}
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-center items-center gap-8 py-12">
+        
         {/* Section Header */}
-        <div className="max-w-2xl text-left mb-16 flex flex-col gap-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-sky-100 bg-sky-50/50 dark:border-sky-950/30 dark:bg-sky-950/20 text-xs font-semibold text-sky-700 dark:text-sky-400 w-max">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 w-full flex flex-col items-center text-center gap-3 shrink-0">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30 text-[10px] font-medium tracking-wider uppercase text-slate-505 dark:text-slate-400">
             <Sparkles className="w-3.5 h-3.5" />
             Fitur Pintar
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-            Inovasi Digital untuk{" "}
-            <span className="bg-linear-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
-              Kemudahan Berkendara Anda
-            </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extralight tracking-tight text-slate-900 dark:text-white leading-tight">
+            Inovasi Digital untuk <span className="font-semibold bg-linear-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">Kemudahan Berkendara</span>
           </h2>
-          <p className="text-base text-slate-500 dark:text-slate-400 leading-relaxed">
-            Ekomotif menghadirkan fitur-fitur terintegrasi untuk menjamin perawatan kendaraan dan bantuan darurat di jalan selalu dapat diandalkan secara transparan.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl font-light">
+            Ekomotif memadukan transparansi data dan kecepatan akses layanan guna menghadirkan ketenangan dalam setiap perjalanan Anda.
           </p>
         </div>
 
-        {/* Features Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          {/* Left Column: Feature Info Cards */}
-          <div className="lg:col-span-6 flex flex-col gap-6 text-left">
-            {featureCards.map((feat, index) => (
-              <motion.div
-                whileInView={{ opacity: 1, y: 0 }}
-                initial={{ opacity: 0, y: 20 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                key={feat.title}
-                className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-sky-100/30 dark:border-sky-950/30 hover:border-sky-300/30 dark:hover:border-sky-800/30 transition-all flex gap-5 items-start group hover:shadow-xs"
-              >
-                <div className="p-3.5 rounded-xl bg-white dark:bg-slate-950 text-sky-500 group-hover:scale-105 transition-transform flex items-center justify-center shrink-0 shadow-xs border border-sky-100/30 dark:border-sky-950/20">
-                  {feat.icon}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base mb-1.5">
-                    {feat.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {feat.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Right Column: Interactive Cost Estimator */}
-          <motion.div
-            whileInView={{ opacity: 1, scale: 1 }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="lg:col-span-6 p-6 rounded-3xl bg-linear-to-b from-sky-50/50 to-blue-50/20 dark:from-slate-900/60 dark:to-slate-950/60 border border-sky-100/40 dark:border-sky-950/30 backdrop-blur-md shadow-xl text-left"
-          >
-            <div className="flex items-center justify-between border-b border-sky-100/30 dark:border-sky-950/20 pb-4 mb-6">
-              <div>
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">Estimator Biaya Servis</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Prediksikan biaya perawatan berkala mobil Anda.</p>
-              </div>
-              <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
-                <Settings className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6">
-              {/* Select Car Type */}
-              <div className="flex flex-col gap-2.5">
-                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Tipe Kendaraan:</span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(["LCGC", "Hatchback", "Sedan", "SUV_MPV"] as CarType[]).map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setCarType(type)}
-                      className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                        carType === type
-                          ? "bg-sky-500 border-sky-500 text-white shadow-xs"
-                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-sky-50/50"
-                      }`}
-                    >
-                      {type.replace("_", " / ")}
-                    </button>
-                  ))}
-                </div>
+        {/* Center Stacking Cards Area (Thinner height and micro stacking offsets) */}
+        <div className="max-w-4xl w-full mx-auto px-6 relative h-[240px] flex items-center justify-center shrink-0">
+          {featureCards.map((feat) => (
+            <motion.div
+              key={feat.title}
+              style={{ 
+                y: feat.y, 
+                scale: feat.scale, 
+                zIndex: feat.zIndex 
+              }}
+              className="absolute w-full h-[200px] rounded-[24px] border-2 border-sky-400 dark:border-sky-500/30 bg-white dark:bg-slate-900 shadow-xl dark:shadow-slate-950/40 flex flex-col justify-center items-center px-8 md:px-16 text-center overflow-hidden"
+            >
+              {/* Giant watermark icon in background */}
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+                {feat.icon}
               </div>
 
-              {/* Select Mileage */}
-              <div className="flex flex-col gap-2.5">
-                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Jarak Tempuh (Odometer):</span>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {mileages.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMileage(m)}
-                      className={`px-2.5 py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                        mileage === m
-                          ? "bg-sky-500 border-sky-500 text-white shadow-xs"
-                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-sky-50/50"
-                      }`}
-                    >
-                      {(m / 1000) + "k km"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Maintenance items display */}
-              <div className="p-4 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-sky-100/20 dark:border-sky-950/20 text-left">
-                <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Item Pengerjaan Servis</span>
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">
-                  {activeData.items}
+              {/* Card Main Info */}
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <h3 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white tracking-wide">
+                  {feat.title}
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-light">
+                  {feat.desc}
                 </p>
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-semibold text-slate-655 dark:text-slate-400 mt-1">
+                  <Star className="w-2.5 h-2.5 text-sky-500" />
+                  {feat.badge}
+                </div>
               </div>
-
-              {/* Cost card */}
-              <div className="p-5 rounded-2xl bg-sky-500/10 dark:bg-sky-500/5 border border-sky-500/20 text-center flex flex-col gap-1.5">
-                <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold uppercase tracking-wider">Estimasi Rata-rata Biaya Servis</span>
-                <h4 className="text-2xl sm:text-3xl font-black text-sky-600 dark:text-sky-400">
-                  Rp {Math.round(estimatedCost).toLocaleString("id-ID")}
-                </h4>
-                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Asumsi estimasi biaya jasa dan suku cadang orisinal di bengkel mitra.</p>
-              </div>
-
-              {/* Booking Button */}
-              <Button
-                variant="default"
-                className="w-full rounded-2xl bg-linear-to-r from-sky-500 to-blue-600 text-white py-6 text-sm font-bold shadow-md shadow-sky-500/10"
-              >
-                Booking Jadwal Servis Sekarang
-              </Button>
-            </div>
-          </motion.div>
+            </motion.div>
+          ))}
         </div>
+
+        {/* Spacer */}
+        <div className="h-4" />
       </div>
-    </section>
+
+    </div>
   )
 }

@@ -3,7 +3,6 @@ import { Hero } from "@/components/sections/hero"
 import { About } from "@/components/sections/about"
 import { Ecosystem } from "@/components/sections/ecosystem"
 import { Features } from "@/components/sections/features"
-import { CTA } from "@/components/sections/cta"
 import { Footer } from "@/components/layout/footer"
 
 export default function Page() {
@@ -20,10 +19,9 @@ export default function Page() {
       {/* Main Content Sections */}
       <main className="relative z-10">
         <Hero />
+        <Features />
         <About />
         <Ecosystem />
-        <Features />
-        <CTA />
       </main>
 
       {/* Footer Layout */}
